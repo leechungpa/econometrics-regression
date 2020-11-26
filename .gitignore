@@ -1,0 +1,24 @@
+###
+# R
+###
+
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+########
+# Python
+########
+
+.DS_Store
+
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+
+###
+# copyright
+###
+raw_data/
