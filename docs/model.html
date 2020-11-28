@@ -382,6 +382,8 @@ summary {
 </div>
 
 
+<div id="데이터-로드" class="section level1">
+<h1>데이터 로드</h1>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## -- Attaching packages --------------------------------------------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
 <pre><code>## √ ggplot2 3.3.1     √ purrr   0.3.4
@@ -433,6 +435,9 @@ data%&gt;%select(&#39;기온&#39;, &#39;강수량&#39;, &#39;풍속&#39;, &#39;�
 ## $ china_covid_death     &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...
 ## $ kospi_index           &lt;dbl&gt; 2010.00, 2010.00, 1993.70, 2010.25, 2010.25, ...
 ## $ soeul_oil_consumption &lt;dbl&gt; 3633, 2982, 2982, 2982, 2982, 2982, 2982, 298...</code></pre>
+</div>
+<div id="기본-모형" class="section level1">
+<h1>기본 모형</h1>
 <pre class="r"><code># corr 높은것 정리
 # 교통량은 inout으로 통일
 # 서울 확진자는 seoul_covid_confirmed로 통일
@@ -464,6 +469,9 @@ lm10_20 = lm(y_pm10 ~
                  기온 +  강수량 +  풍속 +  최다풍향 +  습도 +  기압 +  안개시간 +  
                  transport_inandout +  china_covid_confirmed +  kospi_index +  soeul_oil_consumption,
                data = data20)</code></pre>
+</div>
+<div id="기본-모형-결과" class="section level1">
+<h1>기본 모형 결과</h1>
 <pre class="r"><code>summary(lm25_1920)</code></pre>
 <pre><code>## 
 ## Call:
@@ -608,6 +616,151 @@ lm10_20 = lm(y_pm10 ~
 ##   (1 observation deleted due to missingness)
 ## Multiple R-squared:  0.4176, Adjusted R-squared:  0.3894 
 ## F-statistic:  14.8 on 14 and 289 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+<div id="stepwise" class="section level1">
+<h1>stepwise</h1>
+<pre class="r"><code>final_model = step(lm25_20, direction = &#39;both&#39;)</code></pre>
+<pre><code>## Start:  AIC=1324.31
+## y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index + 
+##     기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 기압 + 안개시간 + 
+##     transport_inandout + china_covid_confirmed + kospi_index + 
+##     soeul_oil_consumption
+## 
+##                         Df Sum of Sq   RSS    AIC
+## - transport_inandout     1      57.8 21532 1323.1
+## - 기압                   1      59.3 21534 1323.1
+## - kospi_index            1      69.8 21544 1323.3
+## - china_covid_confirmed  1     110.4 21585 1323.9
+## &lt;none&gt;                               21474 1324.3
+## - seoul_covid_confirmed  1     253.9 21728 1325.9
+## - china_stock_index      1     270.7 21745 1326.1
+## - 습도                   1     307.7 21782 1326.6
+## - 안개시간               1     334.0 21808 1327.0
+## - soeul_oil_consumption  1     341.1 21816 1327.1
+## - 강수량                 1     369.0 21843 1327.5
+## - 기온                   1     781.5 22256 1333.2
+## - 최다풍향               1     994.9 22469 1336.1
+## - china_pm2.5            1    1016.9 22491 1336.4
+## - 풍속                   1    3852.4 25327 1372.5
+## 
+## Step:  AIC=1323.12
+## y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index + 
+##     기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 기압 + 안개시간 + 
+##     china_covid_confirmed + kospi_index + soeul_oil_consumption
+## 
+##                         Df Sum of Sq   RSS    AIC
+## - 기압                   1      64.3 21597 1322.0
+## - kospi_index            1      72.9 21605 1322.2
+## - china_covid_confirmed  1     104.1 21636 1322.6
+## &lt;none&gt;                               21532 1323.1
+## + transport_inandout     1      57.8 21474 1324.3
+## - china_stock_index      1     254.4 21787 1324.7
+## - 습도                   1     274.6 21807 1325.0
+## - soeul_oil_consumption  1     302.7 21835 1325.4
+## - 안개시간               1     336.0 21868 1325.8
+## - seoul_covid_confirmed  1     349.0 21881 1326.0
+## - 강수량                 1     401.8 21934 1326.7
+## - 기온                   1     755.1 22287 1331.6
+## - china_pm2.5            1     977.7 22510 1334.6
+## - 최다풍향               1     985.5 22518 1334.7
+## - 풍속                   1    3908.1 25440 1371.8
+## 
+## Step:  AIC=1322.03
+## y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index + 
+##     기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 안개시간 + china_covid_confirmed + 
+##     kospi_index + soeul_oil_consumption
+## 
+##                         Df Sum of Sq   RSS    AIC
+## - kospi_index            1      68.5 21665 1321.0
+## - china_covid_confirmed  1     100.0 21697 1321.4
+## &lt;none&gt;                               21597 1322.0
+## + 기압                   1      64.3 21532 1323.1
+## + transport_inandout     1      62.8 21534 1323.1
+## - china_stock_index      1     241.6 21838 1323.4
+## - 습도                   1     252.7 21849 1323.6
+## - soeul_oil_consumption  1     303.9 21900 1324.3
+## - 안개시간               1     331.7 21928 1324.7
+## - seoul_covid_confirmed  1     360.5 21957 1325.1
+## - 강수량                 1     396.3 21993 1325.6
+## - 기온                   1     759.5 22356 1330.5
+## - 최다풍향               1    1014.6 22611 1334.0
+## - china_pm2.5            1    1026.9 22623 1334.2
+## - 풍속                   1    3911.2 25508 1370.6
+## 
+## Step:  AIC=1320.99
+## y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index + 
+##     기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 안개시간 + china_covid_confirmed + 
+##     soeul_oil_consumption
+## 
+##                         Df Sum of Sq   RSS    AIC
+## - china_covid_confirmed  1      41.7 21707 1319.6
+## &lt;none&gt;                               21665 1321.0
+## - china_stock_index      1     196.4 21861 1321.7
+## + kospi_index            1      68.5 21597 1322.0
+## + transport_inandout     1      65.7 21599 1322.1
+## + 기압                   1      59.9 21605 1322.2
+## - soeul_oil_consumption  1     241.4 21906 1322.4
+## - 안개시간               1     263.3 21928 1322.7
+## - seoul_covid_confirmed  1     305.8 21971 1323.2
+## - 습도                   1     326.9 21992 1323.5
+## - 강수량                 1     420.3 22085 1324.8
+## - 기온                   1     826.6 22492 1330.4
+## - 최다풍향               1    1067.2 22732 1333.6
+## - china_pm2.5            1    1146.8 22812 1334.7
+## - 풍속                   1    4286.1 25951 1373.9
+## 
+## Step:  AIC=1319.58
+## y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index + 
+##     기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 안개시간 + soeul_oil_consumption
+## 
+##                         Df Sum of Sq   RSS    AIC
+## &lt;none&gt;                               21707 1319.6
+## - china_stock_index      1     172.6 21879 1320.0
+## - soeul_oil_consumption  1     199.7 21906 1320.4
+## + 기압                   1      59.1 21648 1320.8
+## + transport_inandout     1      58.7 21648 1320.8
+## + china_covid_confirmed  1      41.7 21665 1321.0
+## + kospi_index            1      10.1 21697 1321.4
+## - 습도                   1     303.7 22010 1321.8
+## - seoul_covid_confirmed  1     311.8 22018 1321.9
+## - 안개시간               1     359.7 22066 1322.6
+## - 강수량                 1     410.8 22117 1323.3
+## - 기온                   1     788.1 22495 1328.4
+## - 최다풍향               1    1061.2 22768 1332.1
+## - china_pm2.5            1    1129.5 22836 1333.0
+## - 풍속                   1    4261.0 25968 1372.1</code></pre>
+<pre class="r"><code>summary(final_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + 
+##     china_stock_index + 기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 
+##     안개시간 + soeul_oil_consumption, data = data20)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -18.910  -6.035  -0.923   5.163  28.394 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           53.4052434 15.6535219   3.412 0.000736 ***
+## china_pm2.5            0.0590676  0.0151273   3.905 0.000117 ***
+## seoul_covid_confirmed -0.0008189  0.0003991  -2.052 0.041093 *  
+## china_stock_index     -0.0064141  0.0042025  -1.526 0.128029    
+## 기온                  -0.2516466  0.0771548  -3.262 0.001239 ** 
+## 강수량                -0.0935645  0.0397348  -2.355 0.019196 *  
+## 풍속                  -5.5593745  0.7330459  -7.584 4.46e-13 ***
+## 최다풍향               0.0197322  0.0052137   3.785 0.000187 ***
+## 습도                   0.0914568  0.0451693   2.025 0.043799 *  
+## 안개시간              24.9576075 11.3259393   2.204 0.028332 *  
+## soeul_oil_consumption -0.0024104  0.0014681  -1.642 0.101689    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 8.607 on 293 degrees of freedom
+##   (1 observation deleted due to missingness)
+## Multiple R-squared:  0.4299, Adjusted R-squared:  0.4105 
+## F-statistic:  22.1 on 10 and 293 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
 
 
 
