@@ -1,0 +1,157 @@
+---
+title: "regression (econometrics)"
+author: "leechungpa"
+date: '2020 11 28 '
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = file.path(dirname(inputFile), './docs/model.html')) })
+---
+
+# 데이터 로드
+
+```{r include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(skimr)
+library(corrplot)
+library(PerformanceAnalytics)
+```
+
+먼저 전체 데이터를 로드한다.
+
+```{r}
+data = read.csv('.\\data\\final_merge.csv')
+data20 = data[year(ymd(data$date)) == 2020,]
+```
+
+# EDA
+
+다음은 데이터의 간단한 통계량과 형태이다.
+
+```{r}
+glimpse(data)
+
+skim(data)
+```
+
+## corr plot
+
+### 전체 corr plot
+
+```{r}
+data %>% select(-date, -china_pm2.5) %>%  cor() %>% corrplot(method="color", tl.col="black", title = '')
+```
+
+
+
+### 교통량은 inout으로 통일
+
+```{r}
+corr_data = data %>% select(starts_with('transport'))
+chart.Correlation(corr_data, histogram=TRUE, pch=19)
+```
+
+### 서울 확진자는 seoul_covid_confirmed로 통일
+
+
+```{r}
+corr_data = data20 %>% select(starts_with('seoul'))
+chart.Correlation(corr_data, histogram=TRUE, pch=19)
+```
+
+### 중국도 china_covid_confirmed로 통일
+
+```{r}
+corr_data = data20 %>% select(starts_with('china_covid'))
+chart.Correlation(corr_data, histogram=TRUE, pch=19)
+```
+
+### 기온 강수량 음의 상관관계인데 일단 보류
+
+```{r}
+corr_data = data %>% select('기온', '강수량', '풍속', '최다풍향', '습도', '기압', '안개시간')
+chart.Correlation(corr_data, histogram=TRUE, pch=19)
+```
+
+### 중국 미세먼지/초미세먼지는 서울 y 따라감
+
+```{r}
+corr_data = data %>% select(starts_with('y'),starts_with('china_pm'))
+chart.Correlation(corr_data, histogram=TRUE, pch=19)
+```
+
+
+
+# 기본 모형
+
+```{r}
+
+lm25_1920 = lm(y_pm2.5 ~  
+            china_pm2.5 +  seoul_covid_confirmed +  china_stock_index +  
+            기온 +  강수량 +  풍속 +  최다풍향 +  습도 +  기압 +  안개시간 +  
+            transport_inandout +  china_covid_confirmed +  kospi_index +  soeul_oil_consumption,
+          data = data)
+
+lm25_20 = lm(y_pm2.5 ~  
+               china_pm2.5 +  seoul_covid_confirmed +  china_stock_index +  
+               기온 +  강수량 +  풍속 +  최다풍향 +  습도 +  기압 +  안개시간 +  
+               transport_inandout +  china_covid_confirmed +  kospi_index +  soeul_oil_consumption,
+             data = data20)
+
+lm10_1920 = lm(y_pm10 ~  
+                 china_pm2.5 +  seoul_covid_confirmed +  china_stock_index +  
+                 기온 +  강수량 +  풍속 +  최다풍향 +  습도 +  기압 +  안개시간 +  
+                 transport_inandout +  china_covid_confirmed +  kospi_index +  soeul_oil_consumption,
+               data = data)
+
+
+lm10_20 = lm(y_pm10 ~  
+                 china_pm2.5 +  seoul_covid_confirmed +  china_stock_index +  
+                 기온 +  강수량 +  풍속 +  최다풍향 +  습도 +  기압 +  안개시간 +  
+                 transport_inandout +  china_covid_confirmed +  kospi_index +  soeul_oil_consumption,
+               data = data20)
+```
+
+## 기본 모형 결과
+
+```{r}
+summary(lm25_1920)
+summary(lm25_20)
+summary(lm10_1920)
+summary(lm10_20)
+```
+
+
+# 최종 stepwise 모델 (변수선택)
+
+[AIC](https://en.wikipedia.org/wiki/Akaike_information_criterion) 기준으로 최종 모델 선정
+
+```{r}
+final_model = step(lm25_20, direction = 'both')
+```
+
+## 최종 모델 결과
+
+```{r}
+summary(final_model)
+```
+
+# 표준가정 확인
+
+이분산성
+
+자기상관
+
+다중공산성
+
+내생성
+
+
