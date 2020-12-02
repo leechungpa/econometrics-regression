@@ -74,7 +74,7 @@ corr_data = data20 %>% select(starts_with('china_covid'))
 chart.Correlation(corr_data, histogram=TRUE, pch=19)
 ```
 
-### 기온 강수량 음의 상관관계인데 일단 보류
+### 기온 강수량 적은 상관관계인데 일단 보류
 
 ```{r}
 corr_data = data %>% select('기온', '강수량', '풍속', '최다풍향', '습도', '기압', '안개시간')
@@ -86,6 +86,43 @@ chart.Correlation(corr_data, histogram=TRUE, pch=19)
 ```{r}
 corr_data = data %>% select(starts_with('y'),starts_with('china_pm'))
 chart.Correlation(corr_data, histogram=TRUE, pch=19)
+```
+
+
+## 더미변수 변환
+
+최다풍향 그래프
+
+```{r}
+data %>% mutate(최다풍향 = as.factor(최다풍향)) %>%
+  ggplot(aes(x=최다풍향,  fill=최다풍향))+
+  geom_bar()+
+  coord_polar()+
+  theme(legend.position = "none")+
+  labs(title='각 최다풍향별 일수', x='',y='') 
+  
+data %>% mutate(최다풍향 = as.factor(최다풍향)) %>%
+  ggplot(aes(x=최다풍향,  fill=최다풍향))+
+  geom_bar()+
+  theme(legend.position = "none")+
+  labs(title='각 최다풍향별 일수', x='',y='')
+```
+
+
+강수량의 경우 0 -> 0, 이외는 1
+
+최다풍향의 경우 90 ~ 180 또는 270~360 사이이면 1, 나머지는 0
+
+```{r}
+data = data %>% mutate(강수량 = as.numeric(강수량!=0),
+                          최다풍향 = case_when((90<=최다풍향 & 최다풍향<=180)~1,
+                                           (270<=최다풍향 & 최다풍향<=360)~1,
+                                           TRUE~0))
+
+data20 = data20 %>% mutate(강수량 = as.numeric(강수량!=0),
+                          최다풍향 = case_when((90<=최다풍향 & 최다풍향<=180)~1,
+                                           (270<=최다풍향 & 최다풍향<=360)~1,
+                                           TRUE~0))
 ```
 
 
