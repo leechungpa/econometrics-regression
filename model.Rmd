@@ -230,7 +230,7 @@ lmtest::dwtest(final_model)
 ### Breusch-Godfrey test
 
 ```{r}
-lmtest::bgtest(final_model)
+lmtest::bgtest(final_model, order=7)
 ```
 
 기각... 문제있음
@@ -244,7 +244,14 @@ lmtest::bgtest(final_model)
 
 
 ```{r}
-car::vif(final_model)
+car::vif(final_model) %>%
+  sort(decreasing=TRUE) %>%
+  print() %>%
+  as_tibble(rownames = 'label') %>%
+  ggplot(aes(x=reorder(label, -value, sum), y=value)) + 
+  geom_col(fill='skyblue') + 
+  labs(x='설명변수', y='VIF') +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ### conditional index
@@ -354,7 +361,89 @@ ivreg2 <- function(form,endog,iv,data,digits=3){
 ```
 
 
+```{r include=F}
+#ivreg2(form = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index +
+#          기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption,
+#    endog = 'china_pm2.5',
+#    iv = c('china_covid_confirmed'),
+#    data = data20)
+```
+
+
+
+# 추가 모형
+
+```{r}
+temp = lm(formula = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + 
+    china_stock_index + 기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 
+    안개시간 + soeul_oil_consumption + y_pm2.5_lag,
+    data = mutate(data20,y_pm2.5_lag=lag(y_pm2.5,1)))
+
+summary(temp)
+```
 
 
 
 
+## 이분산성
+
+> 먼저 분산 시각화 그림 (1,3만) (2번째는 정규성 같은거로 필요 없는 것)
+
+```{r}
+plot(temp)
+```
+
+
+
+> Breush Pagan Test
+
+```{r}
+lmtest::bptest(temp)
+```
+
+
+> Whites Test
+
+```{r}
+skedastic::white_lm(temp)
+```
+
+## 자기상관
+
+> Durbin & G.S. Watson Test for Serial Correlation in Least Squares Regression
+
+```{r}
+lmtest::dwtest(temp)
+```
+
+> Breusch-Godfrey test
+
+```{r}
+lmtest::bgtest(temp, order=7)
+```
+
+
+## 다중공선성
+
+> vif
+
+
+```{r}
+car::vif(temp) %>%
+  sort(decreasing=TRUE) %>%
+  print() %>%
+  as_tibble(rownames = 'label') %>%
+  ggplot(aes(x=reorder(label, -value, sum), y=value)) + 
+  geom_col(fill='skyblue') + 
+  labs(x='설명변수', y='VIF') +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+> conditional index
+
+```{r}
+klaR::cond.index(formula = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + 
+                   china_stock_index + 기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 
+                   안개시간 + soeul_oil_consumption + y_pm2.5_lag,
+                 data = mutate(data20,y_pm2.5_lag=lag(y_pm2.5,1)))
+```
