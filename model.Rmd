@@ -297,6 +297,7 @@ lag_data20 = mutate(data20, lag_china_pm25=lag(china_pm2.5,1))
 
 with(na.omit(lag_data20), cor(china_pm2.5, lag_china_pm25))
 with(na.omit(lag_data20), plot(china_pm2.5, lag_china_pm25))
+with(na.omit(lag_data20), acf(china_pm2.5, lag_china_pm25))
 ```
 
 아래는 IV로 `lag china_pm2.5`(하루전) 사용한 경우 : 역인과관계 차단
