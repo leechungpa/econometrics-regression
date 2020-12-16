@@ -164,7 +164,7 @@ summary(lm10_20)
 ```
 
 
-# 최종 stepwise 모델 (변수선택)
+# 최종 모형 (stepwise 변수 선택)
 
 [AIC](https://en.wikipedia.org/wiki/Akaike_information_criterion) 기준으로 최종 모델 선정
 
@@ -172,7 +172,7 @@ summary(lm10_20)
 final_model = step(lm25_20, direction = 'both')
 ```
 
-## 최종 모델 결과
+최종 모형의 결과는 다음과 같다.
 
 ```{r}
 summary(final_model)
@@ -257,7 +257,7 @@ car::vif(final_model) %>%
 ### conditional index
 
 ```{r}
-klaR::cond.index(formula = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed +china_stock_index +
+klaR::cond.index(formula = y_pm2.5 ~ `china_pm2.5` + seoul_covid_confirmed +china_stock_index +
                    기온 + 강수량 + 풍속 + 최다풍향 + 습도 +   안개시간 + soeul_oil_consumption,
                  data = data20)
 ```
@@ -268,14 +268,49 @@ klaR::cond.index(formula = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed +china_
 
 ## 내생성
 
+다른 변수들은 내생성이 없으나 중국 미세먼지`china_pm2.5`는 역인과관계도 발생할 수 있음. 이를 확인하고자 함
 
-```{r include=FALSE}
+### IV : china_covid_confirmed
 
-# 코드는
-# https://diffuseprior.wordpress.com/2012/05/03/an-ivreg2-function-for-r/
+IV로 `china_covid_confirmed` 사용한 경우
+
+```{r}
+model_iv = AER::ivreg(y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index +
+                      기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption |
+                      china_covid_confirmed + seoul_covid_confirmed + china_stock_index +
+                      기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption,
+                      data = data20)
+
+summary(model_iv, diagnostics=TRUE)
+
+with(na.omit(data20), cor(china_pm2.5, china_covid_confirmed))
+with(na.omit(data20), plot(china_pm2.5, china_covid_confirmed))
+```
+
+Weak instruments로 다른 IV를 찾아야함
+
+### IV : lag_china_pm25
+
+```{r}
+lag_data20 = mutate(data20, lag_china_pm25=lag(china_pm2.5,1))
 
 
+with(na.omit(lag_data20), cor(china_pm2.5, lag_china_pm25))
+with(na.omit(lag_data20), plot(china_pm2.5, lag_china_pm25))
+```
 
+아래는 IV로 `lag china_pm2.5`(하루전) 사용한 경우 : 역인과관계 차단
+
+```{r}
+model_iv_lag = AER::ivreg(y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index +
+                            기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption |
+                            lag_china_pm25 + seoul_covid_confirmed + china_stock_index +
+                            기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption,
+                            data = lag_data20)
+summary(model_iv_lag, diagnostics=TRUE)
+```
+
+```{r involve=FALSE}
 ivreg2 <- function(form,endog,iv,data,digits=3){
   # library(MASS)
   # model setup
@@ -361,23 +396,30 @@ ivreg2 <- function(form,endog,iv,data,digits=3){
 ```
 
 
-```{r include=F}
-#ivreg2(form = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index +
-#          기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption,
-#    endog = 'china_pm2.5',
-#    iv = c('china_covid_confirmed'),
-#    data = data20)
+위랑 아래랑 같은것인데, 그냥 다른 패키지 사용한 것이라고 생각하면 동일. p-value는 동일하게 계산됨 (위에가 R 패키지, 아래는 Stata 방식처럼)
+
+Weak instruments 문제없으며, 내생성도 문제 없음
+
+```{r}
+ivreg2(y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + china_stock_index +
+         기온 + 강수량 + 풍속 + 최다풍향 + 습도 +  안개시간 + soeul_oil_consumption,
+     endog="china_pm2.5",iv=c("lag_china_pm25"),data=na.omit(lag_data20))
 ```
 
+즉 내생성 문제 없으므로 모형 진행 가능
 
 
-# 추가 모형
+# 개선 모형
+
+앞서 표준가정에서 발생한 문제를 수정한 모형이다.
+
+`y_pm2.5_lag` 즉 전기의 값을 사용하였다. 다른 변수들의 설명력은 떠러지나, 표준가정이 조금 개선되었다.
 
 ```{r}
 temp = lm(formula = y_pm2.5 ~ china_pm2.5 + seoul_covid_confirmed + 
     china_stock_index + 기온 + 강수량 + 풍속 + 최다풍향 + 습도 + 
     안개시간 + soeul_oil_consumption + y_pm2.5_lag,
-    data = mutate(data20,y_pm2.5_lag=lag(y_pm2.5,1)))
+    data = mutate(data20, y_pm2.5_lag=lag(y_pm2.5,1)))
 
 summary(temp)
 ```
